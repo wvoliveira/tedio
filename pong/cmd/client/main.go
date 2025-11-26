@@ -15,7 +15,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 
-	"github.com/wvoliveira/pong-multiplayer/configs"
+	"github.com/wvoliveira/pong/configs"
 )
 
 type GameState struct {
@@ -25,14 +25,10 @@ type GameState struct {
 	BallY    float32
 }
 
-type ClientInput struct {
-	Cmd    string
-	Player int
-}
-
 type Game struct {
 	state GameState
 	ws    *websocket.Conn
+	cfg   configs.Config
 }
 
 func (g *Game) Update() error {
@@ -47,14 +43,14 @@ func (g *Game) Update() error {
 		player = 1
 	}
 
+	if ebiten.IsKeyPressed(ebiten.KeyS) {
+		cmd = "DOWN"
+		player = 1
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		cmd = "UP"
 		player = 2
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyS) || ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		cmd = "DOWN"
-		player = 1
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
@@ -64,7 +60,7 @@ func (g *Game) Update() error {
 
 	// Envia input se houver comando
 	if cmd != "" {
-		input := ClientInput{Cmd: cmd, Player: player}
+		input := configs.ClientInput{Cmd: cmd, Player: player}
 		var buf bytes.Buffer
 		enc := gob.NewEncoder(&buf)
 		if err := enc.Encode(input); err == nil {
@@ -79,10 +75,10 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.Fill(color.RGBA{0x20, 0x20, 0x30, 0xff})
 
 	// Raquete 1 (branca)
-	vector.FillRect(screen, 10, g.state.Paddle1Y, 10, 50, color.White, false)
+	vector.FillRect(screen, 10, g.state.Paddle1Y, 10, float32(g.cfg.PaddleHeight), color.White, false)
 
 	// Raquete 2 (branca)
-	vector.FillRect(screen, 620, g.state.Paddle2Y, 10, 50, color.White, false)
+	vector.FillRect(screen, float32(g.cfg.ScreenWidth)-20, g.state.Paddle2Y, 10, float32(g.cfg.PaddleHeight), color.White, false)
 
 	// Bola (amarela)
 	vector.FillRect(screen, g.state.BallX, g.state.BallY, 10, 10, color.RGBA{0xff, 0xd7, 0x00, 0xff}, false)
@@ -93,7 +89,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return 640, 480
+	return int(g.cfg.ScreenWidth), int(g.cfg.ScreenHeight)
 }
 
 func main() {
@@ -111,7 +107,7 @@ func main() {
 
 	defer ws.Close()
 
-	game := &Game{ws: ws}
+	game := &Game{ws: ws, cfg: cfg}
 
 	// Goroutine para receber atualizações do servidor
 	go func() {

@@ -16,6 +16,7 @@ type Config struct {
 	Speed      float64
 
 	GameState
+	ClientInput
 }
 
 // Estado do mundo.
@@ -26,15 +27,20 @@ type GameState struct {
 	BallY    float64
 }
 
+type ClientInput struct {
+	Cmd    string
+	Player int
+}
+
 func New() Config {
 	return Config{
 		ServerDomain: "localhost",
 		ServerPort:   "8080",
 
-		ScreenWidth:  640,
-		ScreenHeight: 480,
+		ScreenWidth:  960,
+		ScreenHeight: 540,
 		PaddleWidth:  10,
-		PaddleHeight: 50,
+		PaddleHeight: 100,
 		BallSize:     10,
 
 		BallSpeedX: 4.0,

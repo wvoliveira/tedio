@@ -1,4 +1,4 @@
-module github.com/wvoliveira/pong-multiplayer
+module github.com/wvoliveira/pong
 
 go 1.25.2
 
